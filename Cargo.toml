@@ -1,0 +1,25 @@
+[package]
+name = "revelio"
+version = "0.1.0"
+edition = "2021"
+authors = ["y0k4i"]
+description = "Reveals data from Microsoft Tenants using the Microsoft Graph API"
+license = "MIT"
+repository = "https://github.com/y0k4i-1337/revelio"
+readme = "README.md"
+keywords = ["microsoft", "graph", "api", "oauth2", "cli"]
+categories = ["cli", "microsoft", "graph", "api", "oauth2"]
+license-file = "LICENSE"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = "0.4.26"
+clap = { version = "4.3.21", features = ["derive"] }
+oauth2 = "4.4.1"
+phf = { version = "0.11.2", features = ["macros"] }
+reqwest = "0.11.18"
+serde = "1.0.183"
+serde_json = "1.0.104"
+structopt = "0.3.26"
+tokio = { version = "1.29.1", features = ["full"] }
