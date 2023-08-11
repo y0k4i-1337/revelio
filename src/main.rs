@@ -5,7 +5,7 @@ use revelio::helpers::{Cli, ClientConfig};
 use std::error::Error;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>>  {
+async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
     let config = ClientConfig::new(

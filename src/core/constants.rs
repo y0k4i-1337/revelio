@@ -5,6 +5,9 @@ use phf::phf_map;
 // The following scopes does not require admin consent
 pub const DEFAULT_SCOPES: &str = "openid,profile,email,User.Read,User.ReadBasic.All";
 
+// pub const DEFAULT_CLIENT_ID: &str = "de8bc8b5-d9f9-48b1-a8ad-b748da725064";
+pub const DEFAULT_CLIENT_ID: &str = "d924a533-3729-4708-b3e8-1d2445af35e3"; // skype
+
 pub const USER_AGENTS_KEYS: [&str; 10] = [
     "android",
     "apple_iphone_safari",
@@ -30,7 +33,3 @@ pub const USER_AGENTS: phf::Map<&'static str, &'static str> = phf_map! {
     "win_ie11_win10" => "Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko",
     "win_edge_win10" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 Edg/95.0.1020.44",
 };
-
-// pub const REDIRECT_URL: &str = "https://developer.microsoft.com/en-us/graph/graph-explorer/";
-// pub const DEFAULT_CLIENT_ID: &str = "de8bc8b5-d9f9-48b1-a8ad-b748da725064";
-pub const DEFAULT_CLIENT_ID: &str = "d924a533-3729-4708-b3e8-1d2445af35e3";

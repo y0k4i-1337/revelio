@@ -9,19 +9,16 @@ repository = "https://github.com/y0k4i-1337/revelio"
 readme = "README.md"
 keywords = ["microsoft", "graph", "api", "oauth2", "cli"]
 categories = ["cli", "microsoft", "graph", "api", "oauth2"]
-license-file = "LICENSE"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 chrono = "0.4.26"
-clap = { version = "4.3.21", features = ["derive"] }
+clap = { version = "4.3.21", features = ["derive", "wrap_help"] }
 colored = "2.0.4"
-dialoguer = "0.10.4"
 oauth2 = "4.4.1"
 phf = { version = "0.11.2", features = ["macros"] }
 reqwest = "0.11.18"
 serde = "1.0.183"
 serde_json = "1.0.104"
-structopt = "0.3.26"
 tokio = { version = "1.29.1", features = ["full"] }

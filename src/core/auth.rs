@@ -4,8 +4,8 @@ use colored::Colorize;
 use oauth2::basic::BasicClient;
 use oauth2::reqwest::async_http_client;
 use oauth2::{
-    AccessToken, AuthUrl, ClientId, ClientSecret, DeviceAuthorizationUrl,
-    Scope, StandardDeviceAuthorizationResponse, TokenResponse, TokenUrl,
+    AccessToken, AuthUrl, ClientId, ClientSecret, DeviceAuthorizationUrl, Scope,
+    StandardDeviceAuthorizationResponse, TokenResponse, TokenUrl,
 };
 use serde::{Deserialize, Serialize};
 use std::fs::File;
