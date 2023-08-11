@@ -1,19 +1,15 @@
-use crate::core::constants::{AUTH_URL, REDIRECT_URL, TOKEN_URL};
 use crate::helpers::ClientConfig;
 use chrono::Utc;
 use colored::Colorize;
-use dialoguer::Input;
 use oauth2::basic::BasicClient;
-use oauth2::reqwest::http_client;
+use oauth2::reqwest::async_http_client;
 use oauth2::{
-    AccessToken, AuthType, AuthUrl, AuthorizationCode, ClientId, CsrfToken, PkceCodeChallenge,
-    RedirectUrl, Scope, TokenResponse, TokenUrl, PkceCodeVerifier,
+    AccessToken, AuthUrl, ClientId, ClientSecret, DeviceAuthorizationUrl,
+    Scope, StandardDeviceAuthorizationResponse, TokenResponse, TokenUrl,
 };
-use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
-use std::io::{self, Read};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthResult {
@@ -30,87 +26,76 @@ impl AuthResult {
     }
 }
 
-pub fn authenticate_credential(config: &ClientConfig) -> AuthResult {
-    let client = create_oauth_client(&config.client_id);
-    let (auth_url, pkce_code_verifier) = generate_auth_url(&client);
+pub async fn authenticate_credential(config: &ClientConfig) -> AuthResult {
+    let client = create_oauth_client(config);
+    let auth_url_details = generate_auth_url(&client, config).await;
     println!(
-        "{}\n{}\n",
-        "Please visit the following URL to authenticate your account:",
-        auth_url.blue()
+        "\nUse the code {} at {} to authenticate your account\n",
+        auth_url_details.user_code().secret().bold().green(),
+        auth_url_details.verification_uri().blue()
     );
+    println!("Waiting for authentication...");
 
-    let auth_redirect_url: String = Input::<String>::new()
-        .with_prompt("Paste the URL you were redirected to")
-        .interact_text()
-        .expect("Failed to read input");
+    let token_result = client
+        .exchange_device_access_token(&auth_url_details)
+        .request_async(async_http_client, tokio::time::sleep, None)
+        .await;
 
-    // Remove newline characters
-    let auth_redirect_url = auth_redirect_url.replace('\n', "");
+    eprintln!("Token:{:?}", token_result);
+    let access_token = token_result.as_ref().unwrap().access_token();
+    eprintln!("Access token:{:?}", access_token);
 
-    println!("URL: {}", auth_redirect_url);
-
-    let auth_code = parse_code_from_redirect_url(&auth_redirect_url);
-    let token = exchange_code_for_token(&client, &auth_code, pkce_code_verifier);
-
-    process_raw_auth_result(config, &token)
+    process_raw_auth_result(config, access_token)
 }
 
-fn create_oauth_client(client_id: &str) -> BasicClient {
-    let auth_url = AuthUrl::new(AUTH_URL.to_string()).expect("Invalid authorization URL");
-    let token_url = TokenUrl::new(TOKEN_URL.to_string()).expect("Invalid token URL");
+/// Create an OAuth2 client according to the given configuration.
+fn create_oauth_client(config: &ClientConfig) -> BasicClient {
+    let auth_url = AuthUrl::new(format!(
+        "https://login.microsoftonline.com/{}/oauth2/v2.0/authorize",
+        config.tenant_id
+    ))
+    .expect("Invalid authorization URL");
+    let token_url = TokenUrl::new(format!(
+        "https://login.microsoftonline.com/{}/oauth2/v2.0/token",
+        config.tenant_id
+    ))
+    .expect("Invalid token URL");
+    let device_auth_url = DeviceAuthorizationUrl::new(format!(
+        "https://login.microsoftonline.com/{}/oauth2/v2.0/devicecode",
+        config.tenant_id
+    ))
+    .expect("Invalid device authorization URL");
 
     BasicClient::new(
-        ClientId::new(client_id.to_string()),
-        None,
+        ClientId::new(config.client_id.to_string()),
+        Some(ClientSecret::new(config.client_secret.to_string())),
         auth_url,
         Some(token_url),
     )
-    .set_redirect_uri(RedirectUrl::new(REDIRECT_URL.to_string()).expect("Invalid redirect URL"))
-    // Microsoft Graph requires client_id in URL rather than
-    // using Basic authentication.
-    .set_auth_type(AuthType::RequestBody)
+    // Set the device authorization URL
+    .set_device_authorization_url(device_auth_url)
+    .set_auth_type(oauth2::AuthType::RequestBody)
 }
 
-fn generate_auth_url(client: &BasicClient) ->(String, PkceCodeVerifier) {
-    // Microsoft Graph supports Proof Key for Code Exchange (PKCE - https://oauth.net/2/pkce/).
-    // Create a PKCE code verifier and SHA-256 encode it as a code challenge.
-    let (pkce_code_challenge, pkce_code_verifier) = PkceCodeChallenge::new_random_sha256();
-
-    // Generate the authorization URL to which we'll redirect the user.
-    let (authorize_url, _csrf_state) = client
-        .authorize_url(CsrfToken::new_random)
-        // Utilize the same scope as the Microsoft Graph Explorer.
-        .add_scope(Scope::new("openid".to_string()))
-        .add_scope(Scope::new("profile".to_string()))
-        .add_scope(Scope::new("offline_access".to_string()))
-        .add_scope(Scope::new("User.Read".to_string()))
-        .set_pkce_challenge(pkce_code_challenge)
-        .url();
-
-    (authorize_url.to_string(), pkce_code_verifier)
-}
-
-fn parse_code_from_redirect_url(redirect_url: &str) -> String {
-    let url = Url::parse(redirect_url).expect("Failed to parse redirect URL");
-    let code = url
-        .query_pairs()
-        .find(|(param, _)| *param == "code")
-        .expect("No code in redirect URL")
-        .1
-        .to_string();
-    code
-}
-
-fn exchange_code_for_token(client: &BasicClient, code: &str, pkce_code_verifier: PkceCodeVerifier ) -> AccessToken {
-    // Exchange the code with a token.
-    let token_result = client
-        .exchange_code(AuthorizationCode::new(code.to_string()))
-        // Send the PKCE code verifier in the token request
-        .set_pkce_verifier(pkce_code_verifier)
-        .request(http_client)
-        .expect("Failed to create token");
-
-    token_result.access_token().clone()
+/// Generate the authorization URL and the user code.
+async fn generate_auth_url(
+    client: &BasicClient,
+    config: &ClientConfig,
+) -> StandardDeviceAuthorizationResponse {
+    let scopes = config
+        .scopes
+        .split(',')
+        .map(|s| Scope::new(s.trim().to_string()))
+        .collect::<Vec<_>>();
+    // Generate the URL where the user will be redirected to authorize the client.
+    let details: StandardDeviceAuthorizationResponse = client
+        .exchange_device_code()
+        .expect("Failed to exchange device code")
+        .add_scopes(scopes)
+        .request_async(async_http_client)
+        .await
+        .expect("Failed to create auth URL");
+    details
 }
 
 fn process_raw_auth_result(credential: &ClientConfig, token_result: &AccessToken) -> AuthResult {
@@ -120,7 +105,7 @@ fn process_raw_auth_result(credential: &ClientConfig, token_result: &AccessToken
 
 pub fn export_auth_results(auth_results: &[AuthResult]) {
     let export_file = format!(
-        "spray365_results_{}.json",
+        "revelio_result_{}.json",
         Utc::now().format("%Y-%m-%d_%H-%M-%S")
     );
 

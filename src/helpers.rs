@@ -1,4 +1,4 @@
-use crate::core::constants::USER_AGENTS_KEYS;
+use crate::core::constants::{DEFAULT_SCOPES, USER_AGENTS_KEYS};
 use clap::{Parser, Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
 
@@ -12,8 +12,14 @@ pub struct Cli {
     /// Custom client secret to use for API requests
     #[clap(short = 's', long)]
     pub client_secret: Option<String>,
+    /// Tenant ID to use for API requests
+    #[clap(short = 't', long, default_value = "common")]
+    pub tenant_id: String,
+    /// Comma-separated list of scopes to use for API requests
+    #[clap(short= 'S', long, default_value = DEFAULT_SCOPES)]
+    pub scopes: String,
     /// User-agent to use for API requests
-    #[clap(short = 'U', long, default_value = "revelio", value_parser = USER_AGENTS_KEYS, default_value = "win_chrome_win10")]
+    #[clap(short = 'U', long, value_parser = USER_AGENTS_KEYS, default_value = "win_chrome_win10")]
     pub user_agent: String,
     #[command(subcommand)]
     command: Commands,
@@ -31,22 +37,30 @@ enum Resource {
     Me,
     /// Get the list of users in the tenant
     Users,
-    /// Get the list of groups in the tenant
-    Groups,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClientConfig {
     pub client_id: String,
     pub client_secret: String,
+    pub tenant_id: String,
+    pub scopes: String,
     pub user_agent: String,
 }
 
 impl ClientConfig {
-    pub fn new(client_id: String, client_secret: String, user_agent: String) -> Self {
+    pub fn new(
+        client_id: String,
+        client_secret: String,
+        tenant_id: String,
+        scopes: String,
+        user_agent: String,
+    ) -> Self {
         Self {
             client_id,
             client_secret,
+            tenant_id,
+            scopes,
             user_agent,
         }
     }
