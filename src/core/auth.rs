@@ -29,21 +29,19 @@ impl AuthResult {
 pub async fn authenticate_credential(config: &ClientConfig) -> AuthResult {
     let client = create_oauth_client(config);
     let auth_url_details = generate_auth_url(&client, config).await;
-    println!(
-        "\nUse the code {} at {} to authenticate your account\n",
+    eprintln!(
+        "\nUse the code {} at {} to authenticate your account",
         auth_url_details.user_code().secret().bold().green(),
         auth_url_details.verification_uri().blue()
     );
-    println!("Waiting for authentication...");
+    eprintln!("Waiting for authentication...");
 
     let token_result = client
         .exchange_device_access_token(&auth_url_details)
         .request_async(async_http_client, tokio::time::sleep, None)
         .await;
 
-    eprintln!("Token:{:?}", token_result);
     let access_token = token_result.as_ref().unwrap().access_token();
-    eprintln!("Access token:{:?}", access_token);
 
     process_raw_auth_result(config, access_token)
 }

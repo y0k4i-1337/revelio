@@ -14,11 +14,11 @@ categories = ["cli", "microsoft", "graph", "api", "oauth2"]
 
 [dependencies]
 chrono = "0.4.26"
-clap = { version = "4.3.21", features = ["derive", "wrap_help"] }
+clap = { version = "4.3.21", features = ["derive", "wrap_help", "env"] }
 colored = "2.0.4"
 oauth2 = "4.4.1"
 phf = { version = "0.11.2", features = ["macros"] }
-reqwest = "0.11.18"
+reqwest = { version = "0.11.18", features = ["json"] }
 serde = "1.0.183"
 serde_json = "1.0.104"
 tokio = { version = "1.29.1", features = ["full"] }
