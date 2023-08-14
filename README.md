@@ -97,14 +97,33 @@ Options:
   -k, --access-token <ACCESS_TOKEN>    Set access token to use for API requests [env: REVELIO_TOKEN=]
   -v, --api-version <API_VERSION>      API version to use for API requests [default: v1] [possible values: v1, beta]
   -U, --user-agent <USER_AGENT>        User-agent to use for API requests [default: win_chrome_win10] [possible values:
-                                       android, apple_iphone_safari, apple_mac_firefox, linux_firefox,
-                                       win_chrome_win10, win_ie11_win7, win_ie11_win8, win_ie11_win8.1, win_ie11_win10,
-                                       win_edge_win10]
+                                       android, apple_iphone_safari, apple_mac_firefox, linux_firefox, win_chrome_win10,
+                                       win_ie11_win7, win_ie11_win8, win_ie11_win8.1, win_ie11_win10, win_edge_win10]
   -x, --proxy <PROXY>                  Set proxy to use for API requests (except for authentication)
   -i, --ignore-ssl                     Ignore SSL certificate verification
   -o, --out-dir <OUT_DIR>              Output directory (only used when retrieving large amounts of data) [default: .]
   -h, --help                           Print help
   -V, --version                        Print version
+```
+
+Menu for `get` subcommand:
+
+```
+./target/release/revelio get -h
+Get resources in a tenant
+
+Usage: revelio get [OPTIONS] <RESOURCE>
+
+Arguments:
+  <RESOURCE>  Resource to get [possible values: me, users, users-count]
+
+Options:
+      --select <SELECT>        Custom select query parameter (properties to return)
+      --top <TOP>              Custom top query parameter (page size of results) [default: 500]
+      --skiptoken <SKIPTOKEN>  Set skiptoken to continue from a previous request
+      --pages <PAGES>          Maximum number of pages to return (0 for all pages) [default: 0]
+  -h, --help                   Print help (see more with '--help')
+  -V, --version                Print version
 ```
 
 ## :memo: License ##
