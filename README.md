@@ -94,9 +94,15 @@ Options:
   -t, --tenant-id <TENANT_ID>          Tenant ID to use for API requests [default: common]
   -S, --scopes <SCOPES>                Comma-separated list of scopes to use for API requests [default:
                                        openid,profile,email,User.Read,User.ReadBasic.All]
+  -k, --access-token <ACCESS_TOKEN>    Set access token to use for API requests [env: REVELIO_TOKEN=]
+  -v, --api-version <API_VERSION>      API version to use for API requests [default: v1] [possible values: v1, beta]
   -U, --user-agent <USER_AGENT>        User-agent to use for API requests [default: win_chrome_win10] [possible values:
-                                       android, apple_iphone_safari, apple_mac_firefox, linux_firefox, win_chrome_win10,
-                                       win_ie11_win7, win_ie11_win8, win_ie11_win8.1, win_ie11_win10, win_edge_win10]
+                                       android, apple_iphone_safari, apple_mac_firefox, linux_firefox,
+                                       win_chrome_win10, win_ie11_win7, win_ie11_win8, win_ie11_win8.1, win_ie11_win10,
+                                       win_edge_win10]
+  -x, --proxy <PROXY>                  Set proxy to use for API requests (except for authentication)
+  -i, --ignore-ssl                     Ignore SSL certificate verification
+  -o, --out-dir <OUT_DIR>              Output directory (only used when retrieving large amounts of data) [default: .]
   -h, --help                           Print help
   -V, --version                        Print version
 ```
