@@ -26,6 +26,21 @@ impl ApiClientV1 {
             token,
         }
     }
+
+    pub async fn check_access_token_validity(&self) -> Result<bool, reqwest::Error> {
+        let response = self
+            .client
+            .get(format!("{}/me", self.base_path))
+            .header("Authorization", format!("Bearer {}", self.token))
+            .send()
+            .await?;
+
+        if response.status().is_success() {
+            Ok(true) // Access token is valid
+        } else {
+            Ok(false) // Access token is not valid
+        }
+    }
 }
 
 impl ApiClient for ApiClientV1 {
@@ -42,6 +57,9 @@ impl ApiClient for ApiClientV1 {
         let mut query_vec: Vec<(&str, String)> = Vec::new();
         if let Some(select) = &query_config.select {
             query_vec.push(("$select", select.clone()));
+        }
+        if let Some(skiptoken) = &query_config.skiptoken {
+            query_vec.push(("$skiptoken", skiptoken.clone()));
         }
         query_vec.push(("$top", query_config.top.to_string()));
         query_vec

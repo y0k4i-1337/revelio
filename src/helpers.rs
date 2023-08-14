@@ -79,6 +79,9 @@ pub struct GetArgs {
     /// Custom top query parameter (page size of results)
     #[clap(long, value_parser = top_in_range, default_value = "500")]
     pub top: u16,
+    /// Set skiptoken to continue from a previous request
+    #[clap(long)]
+    pub skiptoken: Option<String>,
     /// Maximum number of pages to return (0 for all pages)
     #[clap(long, value_parser = clap::value_parser!(u16).range(0..), default_value = "0")]
     pub pages: u16,
@@ -128,12 +131,17 @@ impl ClientConfig {
 
 pub struct QueryConfig {
     pub select: Option<String>,
+    pub skiptoken: Option<String>,
     pub top: u16,
 }
 
 impl QueryConfig {
-    pub fn new(select: Option<String>, top: u16) -> Self {
-        Self { select, top }
+    pub fn new(select: Option<String>, skiptoken: Option<String>, top: u16) -> Self {
+        Self {
+            select,
+            skiptoken,
+            top,
+        }
     }
 }
 

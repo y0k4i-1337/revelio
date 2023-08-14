@@ -1,6 +1,7 @@
 use async_trait::async_trait;
+use colored::Colorize;
 use reqwest::header::HeaderMap;
-use reqwest::{Error as ReqwestError, Url};
+use reqwest::Url;
 use serde_json::Value;
 
 use super::client::ApiClientV1;
@@ -12,7 +13,10 @@ impl UsersApi for ApiClientV1 {
     async fn get_users_count(
         &self,
         params: Option<Vec<(&str, String)>>,
-    ) -> Result<usize, ReqwestError> {
+    ) -> Result<usize, Box<dyn std::error::Error>> {
+        if !self.check_access_token_validity().await? {
+            return Err("Access token is not valid".into());
+        }
         let mut headers = HeaderMap::new();
         let params = params.unwrap_or_default();
         headers.insert(
@@ -21,7 +25,8 @@ impl UsersApi for ApiClientV1 {
         );
         headers.insert("ConsistencyLevel", "eventual".parse().unwrap());
         let url = format!("{}/users/$count", self.get_base_path());
-        self.get_client()
+        match self
+            .get_client()
             .get(url.as_str())
             .headers(headers)
             .query(&params)
@@ -29,14 +34,24 @@ impl UsersApi for ApiClientV1 {
             .await?
             .text()
             .await
-            .map(|text| text.parse::<usize>().unwrap())
+        {
+            Ok(text) => {
+                return Ok(text.parse::<usize>().unwrap());
+            }
+            Err(e) => {
+                return Err(e.into());
+            }
+        }
     }
 
     async fn get_users(
         &self,
         params: Option<Vec<(&str, String)>>,
         pages: u16,
-    ) -> Result<Value, ReqwestError> {
+    ) -> Result<Value, Box<dyn std::error::Error>> {
+        if !self.check_access_token_validity().await? {
+            return Err("Access token is not valid".into());
+        }
         let mut params = params.unwrap_or_default();
         let mut headers = HeaderMap::new();
         headers.insert(
@@ -66,25 +81,57 @@ impl UsersApi for ApiClientV1 {
         url.query_pairs_mut().extend_pairs(params);
 
         let mut page_count: u16 = 0;
+        let mut skiptoken = String::new();
         loop {
             let response = self
                 .get_client()
                 .get(url.clone())
                 .headers(headers.clone())
                 .send()
-                .await?
-                .json::<Value>()
                 .await?;
-            let users = response["value"].as_array().unwrap();
-            all_users.extend(users.iter().cloned());
+            // Token has possibly expired
+            if !response.status().is_success() && !skiptoken.is_empty() {
+                eprintln!(
+                    "Access token has probably expired. Latest skiptoken: {}",
+                    skiptoken.blue()
+                );
+                break;
+            }
+
+            let response_json = match response.json::<Value>().await {
+                Ok(response_json) => response_json,
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    break;
+                }
+            };
+            match response_json["value"] {
+                Value::Array(ref users) => {
+                    if users.is_empty() {
+                        break;
+                    } else {
+                        all_users.extend(users.iter().cloned());
+                    }
+                }
+                _ => {
+                    break;
+                }
+            }
 
             page_count += 1;
             if pages > 0 && page_count >= pages {
                 break;
             }
 
-            if let Some(next_link) = response["@odata.nextLink"].as_str() {
+            if let Some(next_link) = response_json["@odata.nextLink"].as_str() {
                 url = Url::parse(next_link).expect("Failed to parse url");
+                // Extract skiptoken parameter from next_link
+                for (key, value) in url.query_pairs() {
+                    if key == "$skiptoken" {
+                        skiptoken = value.to_string();
+                        break;
+                    }
+                }
             } else {
                 break;
             }

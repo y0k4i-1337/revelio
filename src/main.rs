@@ -45,7 +45,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     match cli.command {
         Commands::Get(args) => {
-            let query_config = QueryConfig::new(args.select, args.top);
+            let query_config = QueryConfig::new(args.select, args.skiptoken, args.top);
             match args.resource {
                 Resource::Me => {
                     match api_client

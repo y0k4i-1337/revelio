@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use reqwest::header::HeaderMap;
-use reqwest::Error as ReqwestError;
 use serde_json::Value;
 
 use super::super::me::MeApi;
@@ -9,7 +8,13 @@ use super::client::ApiClientV1;
 
 #[async_trait(?Send)]
 impl MeApi for ApiClientV1 {
-    async fn get_me(&self, params: Option<Vec<(&str, String)>>) -> Result<Value, ReqwestError> {
+    async fn get_me(
+        &self,
+        params: Option<Vec<(&str, String)>>,
+    ) -> Result<Value, Box<dyn std::error::Error>> {
+        if !self.check_access_token_validity().await? {
+            return Err("Access token is not valid".into());
+        }
         let mut headers = HeaderMap::new();
         let mut params = params.unwrap_or_default();
         let mut has_select = false;
