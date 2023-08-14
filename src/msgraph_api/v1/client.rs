@@ -1,26 +1,41 @@
-pub struct ApiClient {
-    client: reqwest::blocking::Client,
+use crate::msgraph_api::ApiClient;
+
+pub struct ApiClientV1 {
+    client: reqwest::Client,
     base_path: String,
     token: String,
 }
 
-impl ApiClient {
-    pub fn new(token: String) -> Self {
-        let client = reqwest::blocking::Client::new();
+impl ApiClientV1 {
+    pub fn new(token: String, proxy: Option<String>, nossl:bool) -> Self {
+        let client = match proxy {
+            Some(proxy) => reqwest::Client::builder()
+                .proxy(reqwest::Proxy::all(proxy).unwrap())
+                .danger_accept_invalid_certs(nossl)
+                .build()
+                .expect("Failed to create reqwest client"),
+            None => reqwest::Client::builder()
+                .danger_accept_invalid_certs(nossl)
+                .build()
+                .expect("Failed to create reqwest client"),
+        };
         let base_path = "https://graph.microsoft.com/v1.0".to_owned();
-        ApiClient {
+        ApiClientV1 {
             client,
             base_path,
             token,
         }
     }
-    pub fn get_token(&self) -> &str {
+}
+
+impl ApiClient for ApiClientV1 {
+    fn get_token(&self) -> &str {
         &self.token
     }
-    pub fn get_client(&self) -> &reqwest::blocking::Client {
+    fn get_client(&self) -> &reqwest::Client {
         &self.client
     }
-    pub fn get_base_path(&self) -> &str {
+    fn get_base_path(&self) -> &str {
         &self.base_path
     }
 }

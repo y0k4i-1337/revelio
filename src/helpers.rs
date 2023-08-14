@@ -1,4 +1,4 @@
-use crate::core::constants::{DEFAULT_SCOPES, USER_AGENTS_KEYS};
+use crate::{core::constants::{DEFAULT_SCOPES, USER_AGENTS_KEYS}, msgraph_api::ApiVersion};
 use clap::{Parser, Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
 
@@ -21,9 +21,18 @@ pub struct Cli {
     /// Set access token to use for API requests
     #[clap(short = 'k', long, env = "REVELIO_TOKEN")]
     pub access_token: Option<String>,
+    /// API version to use for API requests
+    #[clap(short = 'v', long, default_value = "v1")]
+    pub api_version: ApiVersion,
     /// User-agent to use for API requests
     #[clap(short = 'U', long, value_parser = USER_AGENTS_KEYS, default_value = "win_chrome_win10")]
     pub user_agent: String,
+    /// Set proxy to use for API requests (except for authentication)
+    #[clap(short = 'x', long)]
+    pub proxy: Option<String>,
+    /// Ignore SSL certificate verification
+    #[clap(short = 'i', long)]
+    pub ignore_ssl: bool,
     #[command(subcommand)]
     pub command: Commands,
 }

@@ -13,6 +13,7 @@ categories = ["cli", "microsoft", "graph", "api", "oauth2"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+async-trait = "0.1.73"
 chrono = "0.4.26"
 clap = { version = "4.3.21", features = ["derive", "wrap_help", "env"] }
 colored = "2.0.4"
