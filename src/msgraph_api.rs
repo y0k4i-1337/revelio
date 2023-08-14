@@ -11,7 +11,7 @@ pub enum ApiVersion {
     Beta,
 }
 
-pub trait ApiClient: me::MeApi {
+pub trait ApiClient: me::MeApi + users::UsersApi {
     /// Get the access token
     fn get_token(&self) -> &str;
     /// Get the reqwest client

@@ -1,7 +1,8 @@
+use chrono::Utc;
 use clap::Parser;
 use revelio::core::auth::authenticate_credential;
 use revelio::core::constants::DEFAULT_CLIENT_ID;
-use revelio::helpers::{Cli, ClientConfig, Commands, QueryConfig, Resource};
+use revelio::helpers::{save_json_to_file, Cli, ClientConfig, Commands, QueryConfig, Resource};
 use revelio::msgraph_api::{create_api_client, ApiClient};
 use std::error::Error;
 use tokio;
@@ -46,16 +47,51 @@ async fn main() -> Result<(), Box<dyn Error>> {
         Commands::Get(args) => {
             let query_config = QueryConfig::new(args.select, args.top);
             match args.resource {
-                Resource::Me => match api_client.get_me(Some(api_client.query_config_to_params(&query_config))).await {
-                    Ok(result) => {
-                        println!("{}", result);
+                Resource::Me => {
+                    match api_client
+                        .get_me(Some(api_client.query_config_to_params(&query_config)))
+                        .await
+                    {
+                        Ok(result) => {
+                            println!("{}", serde_json::to_string_pretty(&result).unwrap());
+                        }
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                        }
                     }
-                    Err(e) => {
-                        eprintln!("Error: {}", e);
-                    }
-                },
+                }
                 Resource::Users => {
-                    println!("Users");
+                    match api_client
+                        .get_users(
+                            Some(api_client.query_config_to_params(&query_config)),
+                            args.pages,
+                        )
+                        .await
+                    {
+                        Ok(result) => {
+                            // Save results to file
+                            let file_name =
+                                format!("{}_users.json", Utc::now().format("%Y%m%d%H%M%S"));
+                            save_json_to_file(&cli.out_dir, &file_name, &result)
+                                .expect("Failed to save JSON response to file");
+                        }
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                        }
+                    }
+                }
+                Resource::UsersCount => {
+                    match api_client
+                        .get_users_count(Some(api_client.query_config_to_params(&query_config)))
+                        .await
+                    {
+                        Ok(result) => {
+                            println!("{}", result);
+                        }
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                        }
+                    }
                 }
             }
         }

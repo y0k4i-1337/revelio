@@ -4,23 +4,27 @@ use crate::{
 };
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
-use std::ops::RangeInclusive;
+use serde_json::Value;
+use std::{ops::RangeInclusive, path::PathBuf};
 
-const TOP_RANGE: RangeInclusive<usize> = 1..=999;
+// Function to save JSON response to a file in pretty format
+pub fn save_json_to_file(
+    output_dir: &str,
+    file_name: &str,
+    json_value: &Value,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Create a PathBuf for the output directory
+    let mut output_path = PathBuf::from(output_dir);
 
-fn top_in_range(s: &str) -> Result<u16, String> {
-    let top: usize = s
-        .parse()
-        .map_err(|_| format!("`{s}` isn't a valid top value"))?;
-    if TOP_RANGE.contains(&top) {
-        Ok(top as u16)
-    } else {
-        Err(format!(
-            "top not in range {}-{}",
-            TOP_RANGE.start(),
-            TOP_RANGE.end()
-        ))
-    }
+    // Add the filename to the output path
+    output_path.push(file_name);
+
+    // Write the JSON response to the output file in pretty format
+    std::fs::write(&output_path, serde_json::to_string_pretty(json_value)?)?;
+
+    eprintln!("JSON response saved to: {:?}", output_path);
+
+    Ok(())
 }
 
 #[derive(Parser)]
@@ -54,6 +58,9 @@ pub struct Cli {
     /// Ignore SSL certificate verification
     #[clap(short = 'i', long)]
     pub ignore_ssl: bool,
+    /// Output directory (only used when retrieving large amounts of data)
+    #[clap(short = 'o', long, default_value = ".")]
+    pub out_dir: String,
     #[command(subcommand)]
     pub command: Commands,
 }
@@ -85,6 +92,8 @@ pub enum Resource {
     Me,
     /// Get the list of users in the tenant
     Users,
+    /// Get the number of users in the tenant
+    UsersCount,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -125,5 +134,22 @@ pub struct QueryConfig {
 impl QueryConfig {
     pub fn new(select: Option<String>, top: u16) -> Self {
         Self { select, top }
+    }
+}
+
+const TOP_RANGE: RangeInclusive<usize> = 1..=999;
+
+fn top_in_range(s: &str) -> Result<u16, String> {
+    let top: usize = s
+        .parse()
+        .map_err(|_| format!("`{s}` isn't a valid top value"))?;
+    if TOP_RANGE.contains(&top) {
+        Ok(top as u16)
+    } else {
+        Err(format!(
+            "top not in range {}-{}",
+            TOP_RANGE.start(),
+            TOP_RANGE.end()
+        ))
     }
 }

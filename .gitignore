@@ -15,3 +15,6 @@ target/
 
 # Ignore editor files
 .vscode
+
+# Ignore saved outputs
+*_users.json
