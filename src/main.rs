@@ -1,7 +1,7 @@
 use clap::Parser;
 use revelio::core::auth::authenticate_credential;
 use revelio::core::constants::DEFAULT_CLIENT_ID;
-use revelio::helpers::{Cli, ClientConfig, Commands, Resource};
+use revelio::helpers::{Cli, ClientConfig, Commands, QueryConfig, Resource};
 use revelio::msgraph_api::{create_api_client, ApiClient};
 use std::error::Error;
 use tokio;
@@ -35,23 +35,30 @@ async fn main() -> Result<(), Box<dyn Error>> {
         std::process::exit(1);
     }
 
-    let api_client: Box<dyn ApiClient> =
-        create_api_client(cli.api_version, config.access_token.clone().unwrap(), cli.proxy, cli.ignore_ssl);
+    let api_client: Box<dyn ApiClient> = create_api_client(
+        cli.api_version,
+        config.access_token.clone().unwrap(),
+        cli.proxy,
+        cli.ignore_ssl,
+    );
 
     match cli.command {
-        Commands::Get { resource } => match resource {
-            Resource::Me => match api_client.get_me(None, None).await {
-                Ok(result) => {
-                    println!("{}", result);
+        Commands::Get(args) => {
+            let query_config = QueryConfig::new(args.select, args.top);
+            match args.resource {
+                Resource::Me => match api_client.get_me(Some(api_client.query_config_to_params(&query_config))).await {
+                    Ok(result) => {
+                        println!("{}", result);
+                    }
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                    }
+                },
+                Resource::Users => {
+                    println!("Users");
                 }
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                }
-            },
-            Resource::Users => {
-                println!("Users");
             }
-        },
+        }
     }
 
     Ok(())

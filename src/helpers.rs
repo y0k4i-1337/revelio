@@ -1,6 +1,27 @@
-use crate::{core::constants::{DEFAULT_SCOPES, USER_AGENTS_KEYS}, msgraph_api::ApiVersion};
-use clap::{Parser, Subcommand, ValueEnum};
+use crate::{
+    core::constants::{DEFAULT_SCOPES, USER_AGENTS_KEYS},
+    msgraph_api::ApiVersion,
+};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
+use std::ops::RangeInclusive;
+
+const TOP_RANGE: RangeInclusive<usize> = 1..=999;
+
+fn top_in_range(s: &str) -> Result<u16, String> {
+    let top: usize = s
+        .parse()
+        .map_err(|_| format!("`{s}` isn't a valid top value"))?;
+    if TOP_RANGE.contains(&top) {
+        Ok(top as u16)
+    } else {
+        Err(format!(
+            "top not in range {}-{}",
+            TOP_RANGE.start(),
+            TOP_RANGE.end()
+        ))
+    }
+}
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -40,7 +61,22 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Get resources in a tenant
-    Get { resource: Resource },
+    Get(GetArgs),
+}
+
+#[derive(Args)]
+pub struct GetArgs {
+    /// Custom select query parameter (properties to return)
+    #[clap(long)]
+    pub select: Option<String>,
+    /// Custom top query parameter (page size of results)
+    #[clap(long, value_parser = top_in_range, default_value = "500")]
+    pub top: u16,
+    /// Maximum number of pages to return (0 for all pages)
+    #[clap(long, value_parser = clap::value_parser!(u16).range(0..), default_value = "0")]
+    pub pages: u16,
+    /// Resource to get
+    pub resource: Resource,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -78,5 +114,16 @@ impl ClientConfig {
             scopes,
             user_agent,
         }
+    }
+}
+
+pub struct QueryConfig {
+    pub select: Option<String>,
+    pub top: u16,
+}
+
+impl QueryConfig {
+    pub fn new(select: Option<String>, top: u16) -> Self {
+        Self { select, top }
     }
 }

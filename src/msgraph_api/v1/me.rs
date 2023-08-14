@@ -11,10 +11,9 @@ use super::client::ApiClientV1;
 impl MeApi for ApiClientV1 {
     async fn get_me(
         &self,
-        headers: Option<HeaderMap>,
-        params: Option<Vec<(&str, &str)>>,
+        params: Option<Vec<(&str,String)>>,
     ) -> Result<Value, ReqwestError> {
-        let mut headers = headers.unwrap_or_default();
+        let mut headers = HeaderMap::new();
         let mut params = params.unwrap_or_default();
         let mut has_select = false;
         for (key, _) in params.iter() {
@@ -29,7 +28,7 @@ impl MeApi for ApiClientV1 {
             jobTitle,mail,mobilePhone,officeLocation,surname,userPrincipalName,\
             onPremisesDistinguishedName,onPremisesDomainName,onPremisesLastSyncDateTime,\
             onPremisesSecurityIdentifier,onPremisesSamAccountName,onPremisesSyncEnabled,\
-            onPremisesUserPrincipalName,passwordPolicies",
+            onPremisesUserPrincipalName,passwordPolicies".to_owned(),
             )]);
         }
         headers.insert(
