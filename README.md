@@ -58,7 +58,16 @@ The following tools were used in this project:
 
 ## :white_check_mark: Requirements ##
 
-Before starting :checkered_flag:, you need to have [Git](https://git-scm.com) and [Rust](https://rust-lang.org) installed.
+Before starting :checkered_flag:, you need to have [Git](https://git-scm.com)
+and [Rust](https://rust-lang.org) installed.
+
+### Linux
+
+If you encounter problem while building this project related to `pkg-config`,
+you may have to install it:
+  - On Debian/Ubuntu: `sudo apt-get install pkg-config`
+  - On Fedora: `sudo dnf install pkgconfig`
+  - On CentOS/RHEL: `sudo yum install pkgconfig`
 
 ## :checkered_flag: Starting ##
 
