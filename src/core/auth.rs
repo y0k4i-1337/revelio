@@ -6,6 +6,7 @@ use oauth2::reqwest::async_http_client;
 use oauth2::{
     AccessToken, AuthUrl, ClientId, ClientSecret, DeviceAuthorizationUrl, Scope,
     StandardDeviceAuthorizationResponse, TokenResponse, TokenUrl,
+    ResourceOwnerPassword, ResourceOwnerUsername,
 };
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -26,7 +27,7 @@ impl AuthResult {
     }
 }
 
-pub async fn authenticate_credential(config: &ClientConfig) -> AuthResult {
+pub async fn authenticate_credential_device(config: &ClientConfig) -> AuthResult {
     let client = create_oauth_client(config);
     let auth_url_details = generate_auth_url(&client, config).await;
     eprintln!(
@@ -45,6 +46,29 @@ pub async fn authenticate_credential(config: &ClientConfig) -> AuthResult {
 
     process_raw_auth_result(config, access_token)
 }
+
+pub async fn authenticate_credential_password(config: &ClientConfig, username: String, password: String) -> AuthResult {
+    let client = create_oauth_client(config);
+    let token_result = client
+        .exchange_password(
+            &ResourceOwnerUsername::new(username),
+            &ResourceOwnerPassword::new(password),
+        )
+        .add_scopes(
+            config
+                .scopes
+                .split(',')
+                .map(|s| Scope::new(s.trim().to_string()))
+                .collect::<Vec<_>>(),
+        )
+        .request_async(async_http_client)
+        .await;
+
+    let access_token = token_result.as_ref().unwrap().access_token();
+
+    process_raw_auth_result(config, access_token)
+}
+
 
 /// Create an OAuth2 client according to the given configuration.
 fn create_oauth_client(config: &ClientConfig) -> BasicClient {

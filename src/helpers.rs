@@ -1,5 +1,5 @@
 use crate::{
-    core::constants::{DEFAULT_SCOPES, USER_AGENTS_KEYS},
+    core::{auth, constants::{DEFAULT_SCOPES, USER_AGENTS_KEYS}},
     msgraph_api::ApiVersion,
 };
 use clap::{Args, Parser, Subcommand, ValueEnum};
@@ -37,15 +37,25 @@ pub struct Cli {
     /// Custom client secret to use for API requests
     #[clap(short = 's', long)]
     pub client_secret: Option<String>,
-    /// Tenant ID to use for API requests
-    #[clap(short = 't', long, default_value = "common")]
+    /// Tenant ID to use for API requests (e.g. organizations, common, consumers,
+    /// tenant ID or domain)
+    #[clap(short = 't', long, default_value = "organizations")]
     pub tenant_id: String,
     /// Comma-separated list of scopes to use for API requests
     #[clap(short = 'S', long, default_value = DEFAULT_SCOPES)]
     pub scopes: String,
+    /// Authentication flow to use for API requests
+    #[clap(value_enum, short = 'f', long, default_value_t = AuthFlow::Device)]
+    pub flow: AuthFlow,
     /// Set access token to use for API requests
     #[clap(short = 'k', long, env = "REVELIO_TOKEN")]
     pub access_token: Option<String>,
+    /// Username to use for password authentication flow
+    #[clap(short = 'u', long)]
+    pub username: Option<String>,
+    /// Password to use for password authentication flow
+    #[clap(short = 'p', long)]
+    pub password: Option<String>,
     /// API version to use for API requests
     #[clap(short = 'v', long, default_value = "v1")]
     pub api_version: ApiVersion,
@@ -63,6 +73,19 @@ pub struct Cli {
     pub out_dir: String,
     #[command(subcommand)]
     pub command: Commands,
+}
+
+/// Enum for authentication flow
+#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+pub enum AuthFlow {
+    /// Device code flow
+    Device,
+    /// Authorization code flow
+    Code,
+    /// Client credentials flow
+    Client,
+    /// Resource owner password credentials flow
+    Password,
 }
 
 #[derive(Subcommand)]
@@ -104,6 +127,7 @@ pub struct ClientConfig {
     pub client_id: String,
     pub client_secret: String,
     pub tenant_id: String,
+    pub auth_flow: AuthFlow,
     pub access_token: Option<String>,
     pub scopes: String,
     pub user_agent: String,
@@ -114,6 +138,7 @@ impl ClientConfig {
         client_id: String,
         client_secret: String,
         tenant_id: String,
+        auth_flow: AuthFlow,
         access_token: Option<String>,
         scopes: String,
         user_agent: String,
@@ -122,6 +147,7 @@ impl ClientConfig {
             client_id,
             client_secret,
             tenant_id,
+            auth_flow,
             access_token,
             scopes,
             user_agent,
