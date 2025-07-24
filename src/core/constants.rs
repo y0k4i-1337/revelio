@@ -5,8 +5,8 @@ use phf::phf_map;
 // The following scopes does not require admin consent
 pub const DEFAULT_SCOPES: &str = "openid,profile,email,User.Read,User.ReadBasic.All";
 
-// pub const DEFAULT_CLIENT_ID: &str = "de8bc8b5-d9f9-48b1-a8ad-b748da725064";
-pub const DEFAULT_CLIENT_ID: &str = "d924a533-3729-4708-b3e8-1d2445af35e3"; // skype
+// See more client IDs at https://github.com/MarkoH17/Spray365/blob/main/modules/core/constants.py
+pub const DEFAULT_CLIENT_ID: &str = "27922004-5251-4030-b22d-91ecd9a37ea4"; // msmamservice
 
 pub const USER_AGENTS_KEYS: [&str; 10] = [
     "android",

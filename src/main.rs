@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         cli.client_secret.unwrap_or_default(),
         cli.tenant_id,
         cli.flow,
-        cli.access_token,
+        cli.access_token.clone(),
         cli.scopes,
         cli.user_agent,
     );
@@ -55,6 +55,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if config.access_token.is_none() {
         eprintln!("Authentication failed");
         std::process::exit(1);
+    } else {
+        eprintln!("Authentication successful");
+        // Save the access token to a file
+        if let Some(token) = &config.access_token {
+            // Do not save if token was provided via command line or
+            // environment variable
+            if cli.access_token.is_none() {
+                std::fs::write("access_token.txt", token)?;
+                eprintln!("Access token saved to access_token.txt");
+            }
+        }
     }
 
     let api_client: Box<dyn ApiClient> = create_api_client(

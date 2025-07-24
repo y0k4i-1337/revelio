@@ -18,3 +18,4 @@ target/
 
 # Ignore saved outputs
 *_users.json
+access_token.txt

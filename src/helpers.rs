@@ -1,5 +1,5 @@
 use crate::{
-    core::{auth, constants::{DEFAULT_SCOPES, USER_AGENTS_KEYS}},
+    core::{auth, constants::{DEFAULT_SCOPES, USER_AGENTS_KEYS, DEFAULT_CLIENT_ID}},
     msgraph_api::ApiVersion,
 };
 use clap::{Args, Parser, Subcommand, ValueEnum};
@@ -32,7 +32,7 @@ pub fn save_json_to_file(
 #[command(propagate_version = true)]
 pub struct Cli {
     /// Custom client ID to use for API requests
-    #[clap(short = 'c', long)]
+    #[clap(short = 'c', long, default_value = DEFAULT_CLIENT_ID)]
     pub client_id: Option<String>,
     /// Custom client secret to use for API requests
     #[clap(short = 's', long)]
