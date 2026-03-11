@@ -33,6 +33,7 @@
   <a href="#checkered_flag-starting">Starting</a> &#xa0; | &#xa0;
   <a href="#crystal_ball-usage">Usage</a> &#xa0; | &#xa0;
   <a href="#memo-license">License</a> &#xa0; | &#xa0;
+  <a href="#coffee-support">Support</a> &#xa0; | &#xa0;
   <a href="https://github.com/y0k4i-1337" target="_blank">Author</a>
 </p>
 
@@ -140,8 +141,14 @@ Options:
 This project is under license from MIT. For more details, see the [LICENSE](LICENSE.md) file.
 
 
-Made with :heart: by <a href="https://github.com/y0k4i-1337" target="_blank">y0k4i</a>
+&#xa0;
+
+## :coffee: Support ##
+
+<p><a href="https://www.buymeacoffee.com/y0k4i"> <img align="left" src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="50" width="210" alt="y0k4i" /></a></p><br><br>
 
 &#xa0;
+
+Made with :heart: by <a href="https://github.com/y0k4i-1337" target="_blank">y0k4i</a>
 
 <a href="#top">Back to top</a>
